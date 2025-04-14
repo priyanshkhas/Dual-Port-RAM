@@ -1,31 +1,33 @@
-`timescale 1ns / 1ps
+module dual_port_ram (
+    input clk,
 
-module dual_port_ram 
-     #(parameter data_width=8,
-	   parameter addr_width=4,
-	   parameter depth=16)
-	   
-      ( input clk,
-        input wr_en, 
-        input [data_width-1:0] data_in,
-        input [addr_width-1:0] addr_in_0,   //address for port 0
-        input [addr_width-1:0] addr_in_1,   //address for port 1
-        input  port_en_0,                   //enable port 0.
-        input  port_en_1,                   //enable port 1.
-        output [data_width-1:0] data_out_0, //output data from port 0.
-        output [data_width-1:0] data_out_1  //output data from port 1.
-    );
+    // Port A
+    input we_a,
+    input [3:0] addr_a,
+    input [7:0] din_a,
+    output reg [7:0] dout_a,
 
-reg [data_width-1:0] ram [0:depth-1];
+    // Port B
+    input we_b,
+    input [3:0] addr_b,
+    input [7:0] din_b,
+    output reg [7:0] dout_b
+);
 
-always@(posedge clk)
-begin
-    if(port_en_0 == 1 && wr_en == 1)    
-        ram[addr_in_0] <= data_in;
-        
-end
+    // 16 x 8 RAM
+    reg [7:0] ram [15:0];
 
-assign data_out_0 = port_en_0 ? ram[addr_in_0] : 'dZ;   
-assign data_out_1 = port_en_1 ? ram[addr_in_1] : 'dZ;   
+    always @(posedge clk) begin
+        // Port A
+        if (we_a)
+            ram[addr_a] <= din_a;
+        dout_a <= ram[addr_a];
 
-endmodule 
+        // Port B
+        if (we_b)
+            ram[addr_b] <= din_b;
+        dout_b <= ram[addr_b];
+    end
+
+endmodule
+
